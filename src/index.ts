@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
+import cron from "node-cron";
+import axios from "axios";
 
 import routes from "./routes";
 import { errorHandler, notFound } from "./middlewares/error";
@@ -49,6 +51,25 @@ app.use(compression());
 // API routes
 app.use("/api", routes);
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Server is healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Expense Tracker API is running",
+    version: "1.0.0",
+  });
+});
+
 // Handle 404
 app.use(notFound);
 
@@ -56,6 +77,26 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
+
+// Keep-alive cron job (every 30 seconds)
+const setupKeepAlive = () => {
+  const RENDER_URL = process.env.RENDER_URL; // Add this to your environment variables
+
+  if (RENDER_URL && process.env.NODE_ENV === "production") {
+    cron.schedule("*/30 * * * * *", async () => {
+      try {
+        await axios.get(`${RENDER_URL}/health`);
+        // console.log("Keep-alive ping successful");
+      } catch (error) {
+        // console.error("Keep-alive ping failed:", error.message);
+      }
+    });
+    // console.log("Keep-alive cron job started - pinging every 30 seconds");
+  }
+};
+
+// Start keep-alive after server starts
+setupKeepAlive();
 
 // Graceful shutdown
 process.on("SIGINT", async () => {
