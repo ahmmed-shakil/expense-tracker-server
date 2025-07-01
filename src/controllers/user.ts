@@ -41,7 +41,19 @@ export class UserController {
   static updateProfile = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const userId = req.user!.userId;
-      const updateData: UpdateProfileInput = req.body;
+      const rawData: UpdateProfileInput = req.body;
+
+      // Filter out empty strings and undefined values
+      const updateData: UpdateProfileInput = {};
+      if (rawData.name && rawData.name.trim() !== '') {
+        updateData.name = rawData.name.trim();
+      }
+      if (rawData.email && rawData.email.trim() !== '') {
+        updateData.email = rawData.email.trim();
+      }
+      if (rawData.avatar && rawData.avatar.trim() !== '') {
+        updateData.avatar = rawData.avatar.trim();
+      }
 
       // Check if user exists
       const existingUser = await prisma.user.findUnique({
