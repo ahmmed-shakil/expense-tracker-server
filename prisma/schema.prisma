@@ -69,7 +69,8 @@ model RefreshToken {
 model PasswordReset {
   id        String   @id @default(cuid())
   email     String
-  token     String   @unique
+  token     String?  @unique
+  otp       String?
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())

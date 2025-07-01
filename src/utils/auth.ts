@@ -78,4 +78,8 @@ export class AuthUtils {
       Math.random().toString(36).substring(2, 15)
     );
   }
+
+  static generateOTP(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
 }

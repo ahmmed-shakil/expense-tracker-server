@@ -7,9 +7,11 @@ import {
   RegisterInput,
   LoginInput,
   ForgotPasswordInput,
+  VerifyOtpInput,
   ResetPasswordInput,
   ChangePasswordInput,
 } from "../utils/validation";
+import { emailService } from "../services/email";
 
 export class AuthController {
   static register = asyncHandler(
@@ -232,38 +234,101 @@ export class AuthController {
         where: { email },
       });
 
-      if (!user) {
+      if (!user || !user.isActive) {
         // Don't reveal whether user exists or not
         res.json({
           success: true,
           message:
-            "If an account with that email exists, a password reset link has been sent.",
+            "If an account with that email exists, an OTP has been sent to your email.",
         });
         return;
       }
 
-      // Generate reset token
-      const resetToken = AuthUtils.generateResetToken();
+      // Generate OTP
+      const otp = AuthUtils.generateOTP();
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 minutes
 
-      // Store reset token
+      // Delete any existing password reset records for this user
+      await prisma.passwordReset.deleteMany({
+        where: {
+          userId: user.id,
+          used: false,
+        },
+      });
+
+      // Store OTP
       await prisma.passwordReset.create({
         data: {
           email,
-          token: resetToken,
+          otp,
           expiresAt,
           userId: user.id,
         },
       });
 
-      // In production, send email here
-      // console.log(`Password reset token for ${email}: ${resetToken}`);
+      try {
+        // Send OTP via email
+        await emailService.sendOTP(email, otp, user.name);
+        // console.log(`OTP sent to ${email}: ${otp}`);
+      } catch (error) {
+        // console.error("Failed to send OTP email:", error);
+        throw createError("Failed to send OTP email. Please try again.", 500);
+      }
 
       res.json({
         success: true,
         message:
-          "If an account with that email exists, a password reset link has been sent.",
+          "If an account with that email exists, an OTP has been sent to your email.",
+      });
+    }
+  );
+
+  static verifyOtpAndResetPassword = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const { email, otp, newPassword }: VerifyOtpInput = req.body;
+
+      // Find valid OTP record
+      const resetRecord = await prisma.passwordReset.findFirst({
+        where: {
+          email,
+          otp,
+          used: false,
+          expiresAt: {
+            gt: new Date(),
+          },
+        },
+        include: {
+          user: true,
+        },
+      });
+
+      if (!resetRecord) {
+        throw createError("Invalid or expired OTP", 400);
+      }
+
+      // Hash new password
+      const hashedPassword = await AuthUtils.hashPassword(newPassword);
+
+      // Update user password
+      await prisma.user.update({
+        where: { id: resetRecord.userId },
+        data: { password: hashedPassword },
+      });
+
+      // Mark OTP as used
+      await prisma.passwordReset.update({
+        where: { id: resetRecord.id },
+        data: { used: true },
+      });
+
+      // Delete all refresh tokens for this user
+      await AuthUtils.deleteAllUserRefreshTokens(resetRecord.userId);
+
+      res.json({
+        success: true,
+        message:
+          "Password reset successfully. Please log in with your new password.",
       });
     }
   );

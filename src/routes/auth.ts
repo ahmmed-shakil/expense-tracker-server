@@ -6,6 +6,7 @@ import {
   registerSchema,
   loginSchema,
   forgotPasswordSchema,
+  verifyOtpSchema,
   resetPasswordSchema,
   changePasswordSchema,
 } from "../utils/validation";
@@ -21,6 +22,11 @@ router.post(
   "/forgot-password",
   validateBody(forgotPasswordSchema),
   AuthController.forgotPassword
+);
+router.post(
+  "/verify-otp",
+  validateBody(verifyOtpSchema),
+  AuthController.verifyOtpAndResetPassword
 );
 router.post(
   "/reset-password",
