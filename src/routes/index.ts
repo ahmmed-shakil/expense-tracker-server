@@ -10,7 +10,7 @@ const router = Router();
 
 // API routes
 router.use("/auth", authRoutes);
-router.use("/users", userRoutes);
+router.use("/user", userRoutes);
 router.use("/expenses", expenseRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/income", incomeRoutes);

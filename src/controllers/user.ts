@@ -2,7 +2,8 @@ import { Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/auth";
 import { prisma } from "../utils/db";
 import { createError, asyncHandler } from "../middlewares/error";
-import { UpdateProfileInput } from "../utils/validation";
+import { UpdateProfileInput, ChangePasswordInput } from "../utils/validation";
+import bcrypt from "bcryptjs";
 
 export class UserController {
   static getProfile = asyncHandler(
@@ -155,6 +156,50 @@ export class UserController {
       res.json({
         success: true,
         data: { stats },
+      });
+    }
+  );
+
+  static changePassword = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const userId = req.user!.userId;
+      const { currentPassword, newPassword }: ChangePasswordInput = req.body;
+
+      // Get user with password
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          password: true,
+        },
+      });
+
+      if (!user) {
+        throw createError("User not found", 404);
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+
+      if (!isCurrentPasswordValid) {
+        throw createError("Current password is incorrect", 400);
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+      // Update password
+      await prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedNewPassword },
+      });
+
+      res.json({
+        success: true,
+        message: "Password changed successfully",
       });
     }
   );
