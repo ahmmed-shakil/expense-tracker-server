@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String
+  password       String
+  avatar         String?
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  budgets        Budget[]
+  expenses       Expense[]
+  incomes        Income[]
+  passwordResets PasswordReset[]
+  refreshTokens  RefreshToken[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  color       String    @default("#1890ff")
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  budgets     Budget[]
+  expenses    Expense[]
+
+  @@map("categories")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  amount      Float
+  description String
+  notes       String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("expenses")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model Income {
+  id          String   @id @default(cuid())
+  amount      Float
+  description String
+  source      String
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("incomes")
+}
+
+model Budget {
+  id         String    @id @default(cuid())
+  name       String
+  amount     Float
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  userId     String
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("budgets")
+}
