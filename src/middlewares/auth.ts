@@ -76,7 +76,7 @@ export const authenticate = async (
       return;
     }
 
-    console.error("Authentication error:", error);
+    // console.error("Authentication error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",

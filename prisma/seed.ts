@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding database...");
+  // console.log("Seeding database...");
 
   // Create default categories
   const categories = [
@@ -67,12 +67,12 @@ async function main() {
     });
   }
 
-  console.log("Database seeded successfully!");
+  // console.log("Database seeded successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    // console.error(e);
     throw e;
   })
   .finally(async () => {

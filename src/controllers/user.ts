@@ -45,13 +45,13 @@ export class UserController {
 
       // Filter out empty strings and undefined values
       const updateData: UpdateProfileInput = {};
-      if (rawData.name && rawData.name.trim() !== '') {
+      if (rawData.name && rawData.name.trim() !== "") {
         updateData.name = rawData.name.trim();
       }
-      if (rawData.email && rawData.email.trim() !== '') {
+      if (rawData.email && rawData.email.trim() !== "") {
         updateData.email = rawData.email.trim();
       }
-      if (rawData.avatar && rawData.avatar.trim() !== '') {
+      if (rawData.avatar && rawData.avatar.trim() !== "") {
         updateData.avatar = rawData.avatar.trim();
       }
 

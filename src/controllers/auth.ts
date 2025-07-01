@@ -211,7 +211,7 @@ export class AuthController {
         await AuthUtils.deleteRefreshToken(refreshToken);
       } catch (error) {
         // If refresh token deletion fails, still proceed with logout
-        console.log("Failed to delete refresh token:", error);
+        // console.log("Failed to delete refresh token:", error);
       }
     }
 
@@ -258,7 +258,7 @@ export class AuthController {
       });
 
       // In production, send email here
-      console.log(`Password reset token for ${email}: ${resetToken}`);
+      // console.log(`Password reset token for ${email}: ${resetToken}`);
 
       res.json({
         success: true,

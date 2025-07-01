@@ -36,7 +36,7 @@ export const errorHandler = (
 
   // Log error in development
   if (process.env.NODE_ENV === "development") {
-    console.error("Error:", error);
+    // console.error("Error:", error);
   }
 
   res.status(statusCode).json({
