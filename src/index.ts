@@ -24,6 +24,8 @@ app.use(
     origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     credentials: true,
     optionsSuccessStatus: 200,
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
 
